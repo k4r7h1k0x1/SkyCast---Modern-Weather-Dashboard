@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Not Found — SkyCast</title>
+  <meta name="robots" content="noindex" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/src/css/main.css" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="theme-color" content="#0E1220" />
+
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('skycast:theme');
+        var theme = raw ? JSON.parse(raw) : 'system';
+        var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="min-h-screen bg-hero-radial">
+  <div class="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center px-6 text-center">
+    <i class="fa-solid fa-cloud-bolt text-6xl text-violet-400" aria-hidden="true"></i>
+    <h1 class="mt-6 text-5xl font-extrabold text-brand">404</h1>
+    <p class="mt-3 text-lg font-semibold text-slate-700 dark:text-slate-100">
+      Looks like this forecast blew off course.
+    </p>
+    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+      The page you're looking for doesn't exist or may have moved.
+    </p>
+    <a href="/" class="btn-primary mt-8">
+      <i class="fa-solid fa-house" aria-hidden="true"></i>
+      Back to SkyCast
+    </a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="./src/assets/logo.png" />
+  <title>SkyCast — Compare Cities</title>
+  <meta name="description" content="Compare current weather conditions side-by-side for your pinned cities." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="/src/css/main.css" />
+  <meta name="theme-color" content="#0E1220" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="/manifest.json" />
+
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('skycast:theme');
+        var theme = raw ? JSON.parse(raw) : 'system';
+        var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    })();
+  </script>
+
+  <script type="module" src="/src/js/compare.js"></script>
+</head>
+<body class="min-h-screen bg-hero-radial">
+  <a href="#compare-content" class="skip-link">Skip to main content</a>
+
+  <div class="mx-auto flex min-h-screen max-w-6xl flex-col px-6">
+    <header class="flex flex-wrap items-center justify-between gap-4 py-6">
+      <a href="/" class="flex items-center gap-2 text-xl font-bold text-brand">
+        <i class="fa-solid fa-cloud-sun text-2xl" aria-hidden="true"></i>
+        <span>SkyCast</span>
+      </a>
+
+      <form id="search-form" class="relative order-3 w-full sm:order-2 sm:w-auto sm:flex-1 sm:max-w-sm" role="search" autocomplete="off">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400" aria-hidden="true"></i>
+          <input
+            id="search-input"
+            type="text"
+            name="city"
+            placeholder="Search city..."
+            autocomplete="off"
+            class="search-input pl-10"
+            role="combobox"
+            aria-expanded="false"
+            aria-controls="search-suggestions"
+            aria-autocomplete="list"
+            aria-label="Search for a city"
+          />
+          <i id="search-spinner" class="fa-solid fa-spinner fa-spin absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 hidden" aria-hidden="true"></i>
+        </div>
+        <ul id="search-suggestions" class="glass-card absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 hidden max-h-72 overflow-y-auto py-1 shadow-card" role="listbox"></ul>
+      </form>
+
+      <div class="order-2 flex items-center gap-3 sm:order-3">
+        <button id="my-location-btn" type="button" class="btn-icon w-auto gap-2 rounded-full px-4 text-sm font-medium" aria-label="Use my current location">
+          <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+          <span class="hidden sm:inline">My Location</span>
+        </button>
+        <button id="theme-toggle" type="button" class="btn-icon" aria-label="Toggle theme">
+          <i class="fa-solid fa-desktop" aria-hidden="true"></i>
+        </button>
+        <div class="relative">
+          <button id="settings-toggle" type="button" class="btn-icon" aria-label="Settings" aria-haspopup="true" aria-expanded="false">
+            <i class="fa-solid fa-gear" aria-hidden="true"></i>
+          </button>
+          <div id="settings-panel" hidden class="glass-card absolute right-0 top-[calc(100%+0.5rem)] z-30 w-72 p-4 shadow-card"></div>
+        </div>
+      </div>
+    </header>
+
+    <main id="compare-content" tabindex="-1" class="flex-1 pb-16">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-scale-balanced text-brand" aria-hidden="true"></i>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Compare Cities</h1>
+      </div>
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Side-by-side conditions for your pinned cities.</p>
+
+      <div id="compare-empty" hidden class="mt-16 flex flex-col items-center gap-4 text-center">
+        <i class="fa-regular fa-star text-3xl text-slate-400" aria-hidden="true"></i>
+        <p class="max-w-sm text-sm text-slate-500 dark:text-slate-400">
+          Pin at least 2 cities from the dashboard (tap the star next to a city name) to compare them here.
+        </p>
+        <a href="/" class="btn-primary">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          Search a City
+        </a>
+      </div>
+
+      <div id="compare-grid" class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3"></div>
+    </main>
+
+    <footer class="py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+      <p class="flex items-center justify-center gap-1.5 font-semibold text-brand">
+        <i class="fa-solid fa-cloud-sun" aria-hidden="true"></i> SkyCast
+      </p>
+      <p class="mt-1">
+        Built with <i class="fa-solid fa-heart text-rose-400" aria-hidden="true"></i> using
+        <a href="https://open-meteo.com" target="_blank" rel="noopener" class="text-brand hover:underline">Open-Meteo API</a>
+      </p>
+      <p class="mt-1">
+        Built by k4r7h1k0x1<i class="fa-solid fa-heart text-rose-600"></i> 
+      </p>b
+    </footer>
+  </div>
+</body>
+</html>
