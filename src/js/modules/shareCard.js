@@ -1,11 +1,21 @@
+import { showToast } from '../modules/toast.js';
+
 export function initShareButton(getShareData, buttonId = 'share-btn') {
   const button = document.getElementById(buttonId);
   if (!button) return;
 
   button.addEventListener('click', () => {
     const data = getShareData();
-    if (!data) return;
-    shareCard(data);
+    if (!data) {
+      showToast('Weather data is still loading — try again in a moment.', { type: 'info' });
+      return;
+    }
+
+    try {
+      shareCard(data);
+    } catch {
+      showToast("Couldn't generate the share card. Please try again.", { type: 'error' });
+    }
   });
 }
 
@@ -13,7 +23,10 @@ function shareCard(data) {
   const canvas = buildShareCanvas(data);
 
   canvas.toBlob(async (blob) => {
-    if (!blob) return;
+    if (!blob) {
+      showToast("Couldn't generate the share image.", { type: 'error' });
+      return;
+    }
 
     const fileName = `skycast-${data.name.replace(/\s+/g, '-').toLowerCase()}.png`;
     const file = new File([blob], fileName, { type: 'image/png' });
@@ -31,12 +44,16 @@ function shareCard(data) {
       }
     }
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      showToast("Couldn't download the share image.", { type: 'error' });
+    }
   }, 'image/png');
 }
 
@@ -44,7 +61,9 @@ function buildShareCanvas({ name, country, temp, unit, condition, humidity, wind
   const canvas = document.createElement('canvas');
   canvas.width = 800;
   canvas.height = 450;
+
   const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas 2D context unavailable');
 
   const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
   bg.addColorStop(0, '#0E1220');

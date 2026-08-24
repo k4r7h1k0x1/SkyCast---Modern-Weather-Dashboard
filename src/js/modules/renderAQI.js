@@ -55,11 +55,19 @@ export function renderAQI(airQuality) {
           <span class="text-slate-400">${round(value, 1)} ${unit}</span>
         </div>
         <div class="mt-1 h-1.5 w-full rounded-full bg-black/10 dark:bg-white/10">
-          <div class="h-full rounded-full bg-brand" style="width:${pct}%"></div>
+          <div class="pollutant-bar h-full rounded-full bg-brand" data-target-width="${pct}" style="width:0%"></div>
         </div>
       </div>
     `;
   }).join('');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      container.querySelectorAll('.pollutant-bar').forEach((bar) => {
+        bar.style.width = `${bar.dataset.targetWidth}%`;
+      });
+    });
+  });
 }
 
 function hexToRgba(hex, alpha) {

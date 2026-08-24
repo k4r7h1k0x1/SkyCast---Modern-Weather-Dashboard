@@ -19,11 +19,11 @@ export function renderDaily(forecast) {
     const max = round(maxs[i]);
 
     const rawWidthPct = ((max - min) / range) * 100;
-    const widthPct = Math.max(rawWidthPct, 6);
+    const widthPct = Math.max(rawWidthPct, 6); 
     const leftPct = Math.max(0, Math.min(((min - overallMin) / range) * 100, 100 - widthPct));
 
     return `
-      <div class="flex items-center gap-2 py-3 text-sm sm:gap-3">
+      <div class="daily-row flex items-center gap-2 rounded-xl px-2 py-3 text-sm transition-colors duration-150 sm:gap-3">
         <span class="w-9 shrink-0 font-semibold sm:w-12 ${i === 0 ? 'text-brand' : 'text-slate-600 dark:text-slate-200'}">
           ${formatDayLabel(date, i)}
         </span>

@@ -1,7 +1,7 @@
 import { formatHour12, formatDayLabel, findNowHourIndex, round } from '../utils/format.js';
 
 let chartInstance = null;
-let ChartConstructor = null;
+let ChartConstructor = null; 
 
 async function loadChartLibrary() {
   if (!ChartConstructor) {
@@ -43,6 +43,8 @@ export async function renderChart(forecast, metric = 'temperature') {
   chartInstance?.destroy();
 
   const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas 2D context unavailable');
+
   const isDark = document.documentElement.classList.contains('dark');
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)';
   const textColor = isDark ? '#94A3B8' : '#64748B';
@@ -88,6 +90,16 @@ export async function renderChart(forecast, metric = 'temperature') {
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: isDark ? 'rgba(19, 26, 43, 0.96)' : 'rgba(255, 255, 255, 0.98)',
+          titleColor: isDark ? '#E2E8F0' : '#1E293B',
+          bodyColor: isDark ? '#CBD5E1' : '#475569',
+          borderColor: hexToRgba(color, 0.5),
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 10,
+          displayColors: false,
+          titleFont: { size: 11, weight: '600' },
+          bodyFont: { size: 13, weight: '700' },
           callbacks: {
             label: (item) => `${round(item.raw, decimals)}${unit}`,
           },

@@ -3,18 +3,18 @@ import { initTheme } from './modules/theme.js';
 import { initSearch } from './modules/search.js';
 import { initGeolocation } from './modules/geolocation.js';
 import { renderWeatherBackground } from './modules/renderWeatherBackground.js';
-import { initSettingsPanel } from './modules/settingsPanel.js';
 import { registerServiceWorker } from './utils/registerServiceWorker.js';
+import { initSearchShortcut } from './modules/keyboardShortcuts.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   initTheme('#theme-toggle');
   playEntranceAnimation();
   initSearch();
   initGeolocation();
-  initSettingsPanel();
   renderWeatherBackground('weather-bg', 'clouds', true);
   wireSkipLink();
   registerServiceWorker();
+  initSearchShortcut();
 });
 
 function wireSkipLink() {

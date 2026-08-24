@@ -23,7 +23,7 @@ export function renderHourly(forecast) {
       : 'bg-black/5 dark:bg-white/5';
 
     html.push(`
-      <div class="flex min-w-[96px] flex-col items-center gap-2 rounded-xl2 ${highlight} px-4 py-4 text-center">
+      <div class="hourly-card flex min-w-[96px] flex-col items-center gap-2 rounded-xl2 ${highlight} px-4 py-4 text-center">
         <span class="text-xs font-semibold text-slate-500 dark:text-slate-300">${label}</span>
         <i class="fa-solid ${weather.icon} text-2xl ${weather.colorClass}" aria-hidden="true"></i>
         <span class="text-lg font-bold text-slate-700 dark:text-slate-100">${temp}°</span>

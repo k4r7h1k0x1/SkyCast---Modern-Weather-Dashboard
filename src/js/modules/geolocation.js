@@ -1,6 +1,6 @@
 import { reverseGeocode } from '../api/openMeteo.js';
 import { storage, STORAGE_KEYS } from '../utils/storage.js';
-import { showToast } from './toast.js';
+import { showToast } from '../modules/toast.js';
 
 function getCurrentPosition(options) {
   return new Promise((resolve, reject) => {
@@ -22,7 +22,7 @@ export function initGeolocation(buttonSelector = '#my-location-btn') {
 
   button.addEventListener('click', async () => {
     if (!('geolocation' in navigator)) {
-      showToast('Geolocation is not supported by your browser.', { type: 'warning' });
+      showToast('Geolocation is not supported by your browser.', { type: 'error' });
       return;
     }
 
@@ -50,7 +50,7 @@ export function initGeolocation(buttonSelector = '#my-location-btn') {
     } catch (error) {
       setLoading(false);
       const message = ERROR_MESSAGES[error?.code] ?? 'Could not determine your location.';
-      showToast(message, { type: 'warning' });
+      showToast(message, { type: 'error' });
     }
   });
 

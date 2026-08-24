@@ -57,8 +57,12 @@
             aria-label="Search for a city"
           />
           <i id="search-spinner" class="fa-solid fa-spinner fa-spin absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 hidden" aria-hidden="true"></i>
+          <kbd class="search-shortcut-hint hidden sm:inline-flex" aria-hidden="true">/</kbd>
+          <button type="button" id="search-clear-btn" class="search-clear-btn" aria-label="Clear search" tabindex="-1">
+            <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+          </button>
         </div>
-        <ul id="search-suggestions" class="glass-card absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 hidden max-h-72 overflow-y-auto py-1 shadow-card" role="listbox"></ul>
+        <ul id="search-suggestions" class="glass-card absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 max-h-72 overflow-y-auto py-1 shadow-card" role="listbox"></ul>
       </form>
 
       <div class="order-2 flex items-center gap-3 sm:order-3">
@@ -69,12 +73,6 @@
         <button id="theme-toggle" type="button" class="btn-icon" aria-label="Toggle theme">
           <i class="fa-solid fa-desktop" aria-hidden="true"></i>
         </button>
-        <div class="relative">
-          <button id="settings-toggle" type="button" class="btn-icon" aria-label="Settings" aria-haspopup="true" aria-expanded="false">
-            <i class="fa-solid fa-gear" aria-hidden="true"></i>
-          </button>
-          <div id="settings-panel" hidden class="glass-card absolute right-0 top-[calc(100%+0.5rem)] z-30 w-72 p-4 shadow-card"></div>
-        </div>
       </div>
     </header>
 
@@ -99,7 +97,7 @@
       <div id="compare-grid" class="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3"></div>
     </main>
 
-    <footer class="py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+    <footer class="py-6 text-center text-sm text-slate-500 dark:text-slate-600">
       <p class="flex items-center justify-center gap-1.5 font-semibold text-brand">
         <i class="fa-solid fa-cloud-sun" aria-hidden="true"></i> SkyCast
       </p>
@@ -109,7 +107,7 @@
       </p>
       <p class="mt-1">
         Built by k4r7h1k0x1<i class="fa-solid fa-heart text-rose-600"></i> 
-      </p>b
+      </p>
     </footer>
   </div>
 </body>

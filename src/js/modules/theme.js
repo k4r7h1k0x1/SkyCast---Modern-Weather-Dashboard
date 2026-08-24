@@ -27,22 +27,23 @@ function applyTheme(theme) {
   const resolved = resolveTheme(theme);
   document.documentElement.classList.toggle('dark', resolved === 'dark');
   document.documentElement.setAttribute('data-theme-mode', theme);
+  document.dispatchEvent(new CustomEvent('skycast:themechange', { detail: { theme, resolved } }));
 }
 
-function updateToggleUI(button, theme) {
+function updateToggleUI(button, theme, { animate = false } = {}) {
   if (!button) return;
   const icon = button.querySelector('i');
-  if (icon) icon.className = ICONS[theme];
+  if (icon) {
+    icon.className = ICONS[theme];
+    if (animate) {
+      icon.classList.remove('theme-icon-swap');
+      void icon.offsetWidth;
+      icon.classList.add('theme-icon-swap');
+    }
+  }
   button.setAttribute('aria-label', LABELS[theme]);
   button.setAttribute('title', LABELS[theme]);
 }
-
-export function setTheme(theme) {
-  storage.set(STORAGE_KEYS.THEME, theme);
-  applyTheme(theme);
-  document.dispatchEvent(new CustomEvent('skycast:theme-change', { detail: { theme } }));
-}
-
 
 export function initTheme(toggleSelector = '#theme-toggle') {
   const stored = storage.get(STORAGE_KEYS.THEME, 'system');
@@ -54,11 +55,9 @@ export function initTheme(toggleSelector = '#theme-toggle') {
   button?.addEventListener('click', () => {
     const current = storage.get(STORAGE_KEYS.THEME, 'system');
     const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
-    setTheme(next);
-  });
-
-  document.addEventListener('skycast:theme-change', (event) => {
-    updateToggleUI(button, event.detail.theme);
+    storage.set(STORAGE_KEYS.THEME, next);
+    applyTheme(next);
+    updateToggleUI(button, next, { animate: true });
   });
 
   mediaQuery.addEventListener('change', () => {

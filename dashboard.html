@@ -36,7 +36,6 @@
   </script>
 
   <script type="module" src="/src/js/dashboard.js"></script>
-
   <script>
     window.addEventListener('load', function () {
       try {
@@ -61,6 +60,8 @@
   <a href="#dashboard-content" class="skip-link">Skip to weather content</a>
 
   <div class="mx-auto flex min-h-screen max-w-6xl flex-col px-6">
+    <div id="scroll-top-sentinel" aria-hidden="true"></div>
+
     <header class="flex flex-wrap items-center justify-between gap-4 py-6">
       <a href="/" class="flex items-center gap-2 text-xl font-bold text-brand">
         <i class="fa-solid fa-cloud-sun text-2xl" aria-hidden="true"></i>
@@ -84,8 +85,12 @@
             aria-label="Search for a city"
           />
           <i id="search-spinner" class="fa-solid fa-spinner fa-spin absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 hidden" aria-hidden="true"></i>
+          <kbd class="search-shortcut-hint hidden sm:inline-flex" aria-hidden="true">/</kbd>
+          <button type="button" id="search-clear-btn" class="search-clear-btn" aria-label="Clear search" tabindex="-1">
+            <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+          </button>
         </div>
-        <ul id="search-suggestions" class="glass-card absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 hidden max-h-72 overflow-y-auto py-1 shadow-card" role="listbox"></ul>
+        <ul id="search-suggestions" class="glass-card absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 max-h-72 overflow-y-auto py-1 shadow-card" role="listbox"></ul>
       </form>
 
       <div class="order-2 flex items-center gap-3 sm:order-3">
@@ -96,16 +101,9 @@
         <button id="theme-toggle" type="button" class="btn-icon" aria-label="Toggle theme">
           <i class="fa-solid fa-desktop" aria-hidden="true"></i>
         </button>
-        <div class="relative">
-          <button id="settings-toggle" type="button" class="btn-icon" aria-label="Settings" aria-haspopup="true" aria-expanded="false">
-            <i class="fa-solid fa-gear" aria-hidden="true"></i>
-          </button>
-          <div id="settings-panel" hidden class="glass-card absolute right-0 top-[calc(100%+0.5rem)] z-30 w-72 p-4 shadow-card"></div>
-        </div>
       </div>
     </header>
 
-    <!-- Loading state — skeleton placeholders shaped like the real layout, shown while the Open-Meteo fetch is in flight -->
     <div id="dashboard-loading" hidden class="flex-1 flex-col gap-6 py-2" role="status" aria-live="polite">
       <span class="sr-only">Fetching the latest conditions…</span>
 
@@ -162,20 +160,26 @@
     </div>
 
     <div id="dashboard-empty" hidden class="flex-1 flex-col items-center justify-center gap-4 py-24 text-center">
-      <i class="fa-solid fa-cloud-sun text-5xl text-amber-400" aria-hidden="true"></i>
-      <h2 class="text-xl font-bold text-slate-700 dark:text-slate-100">Let's find your weather</h2>
+      <i class="fa-solid fa-cloud-sun text-5xl text-brand" aria-hidden="true"></i>
+      <h1 class="mt-2 text-2xl font-bold text-slate-800 dark:text-white">Let's find your weather</h1>
       <p class="max-w-sm text-sm text-slate-500 dark:text-slate-400">
-        Search for a city above, or use "My Location" to get started.
+        Search for a city or use your current location to see live conditions, hourly forecasts, and air quality.
       </p>
-      <div id="dashboard-empty-recents" hidden class="mt-1 flex max-w-md flex-wrap items-center justify-center gap-2"></div>
+      <div class="mt-2 flex flex-wrap items-center justify-center gap-3">
+        <button id="empty-search-btn" type="button" class="btn-primary">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          Search a City
+        </button>
+        <button id="empty-location-btn" type="button" class="btn-icon w-auto gap-2 rounded-full px-4 text-sm font-medium">
+          <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+          Use My Location
+        </button>
+      </div>
     </div>
 
     <main id="dashboard-content" tabindex="-1" hidden class="flex-1 pb-16 transition-opacity duration-300">
-      <!-- Pinned-city quick-switch — populated by renderFavorites.js -->
       <div id="favorites-bar" hidden class="relative z-10 mb-3 flex flex-wrap items-center gap-2"></div>
       <div id="weather-alerts" hidden class="relative z-10 mb-3 flex flex-col gap-2"></div>
-
-      <!-- Hero band: current conditions -->
       <section id="hero" class="glass-card relative mt-2 grid grid-cols-1 gap-8 overflow-hidden p-8 lg:grid-cols-[1fr_auto]">
         <div id="weather-bg" class="weather-bg" aria-hidden="true"></div>
 
@@ -255,70 +259,70 @@
         </div>
 
         <div id="details-grid" class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <article class="detail-card glass-card p-4" data-detail="humidity">
+          <article class="detail-card glass-card glass-card-hover p-4" data-detail="humidity">
             <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand/15 text-brand"><i class="fa-solid fa-droplet" aria-hidden="true"></i></span>
             <p class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Humidity</p>
             <p class="value text-xl font-bold text-slate-700 dark:text-slate-100">--%</p>
             <p class="sub text-[11px] text-slate-400">Dew point --°</p>
           </article>
 
-          <article class="detail-card glass-card p-4" data-detail="wind-speed">
+          <article class="detail-card glass-card glass-card-hover p-4" data-detail="wind-speed">
             <span class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-cyan/15 text-accent-cyan"><i class="fa-solid fa-wind" aria-hidden="true"></i></span>
             <p class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Wind Speed</p>
             <p class="value text-xl font-bold text-slate-700 dark:text-slate-100">-- km/h</p>
             <p class="sub text-[11px] text-slate-400">Direction —</p>
           </article>
 
-          <article class="detail-card glass-card p-4" data-detail="pressure">
+          <article class="detail-card glass-card glass-card-hover p-4" data-detail="pressure">
             <span class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-violet/15 text-accent-violet"><i class="fa-solid fa-gauge" aria-hidden="true"></i></span>
             <p class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Pressure</p>
             <p class="value text-xl font-bold text-slate-700 dark:text-slate-100">-- hPa</p>
             <p class="sub text-[11px] text-slate-400">—</p>
           </article>
 
-          <article class="detail-card glass-card p-4" data-detail="visibility">
+          <article class="detail-card glass-card glass-card-hover p-4" data-detail="visibility">
             <span class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-emerald/15 text-accent-emerald"><i class="fa-solid fa-eye" aria-hidden="true"></i></span>
             <p class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Visibility</p>
             <p class="value text-xl font-bold text-slate-700 dark:text-slate-100">-- km</p>
             <p class="sub text-[11px] text-slate-400">—</p>
           </article>
 
-          <article class="detail-card glass-card p-4" data-detail="uv-index">
+          <article class="detail-card glass-card glass-card-hover p-4" data-detail="uv-index">
             <span class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-orange/15 text-accent-orange"><i class="fa-solid fa-sun" aria-hidden="true"></i></span>
             <p class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">UV Index</p>
             <p class="value text-xl font-bold text-slate-700 dark:text-slate-100">--</p>
             <p class="sub text-[11px] text-slate-400">—</p>
           </article>
 
-          <article class="detail-card glass-card p-4" data-detail="cloud-cover">
+          <article class="detail-card glass-card glass-card-hover p-4" data-detail="cloud-cover">
             <span class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-400/15 text-slate-400"><i class="fa-solid fa-cloud" aria-hidden="true"></i></span>
             <p class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Cloud Cover</p>
             <p class="value text-xl font-bold text-slate-700 dark:text-slate-100">--%</p>
             <p class="sub text-[11px] text-slate-400">—</p>
           </article>
 
-          <article class="detail-card glass-card p-4" data-detail="rain-chance">
+          <article class="detail-card glass-card glass-card-hover p-4" data-detail="rain-chance">
             <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand/15 text-brand"><i class="fa-solid fa-cloud-rain" aria-hidden="true"></i></span>
             <p class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Rain Chance</p>
             <p class="value text-xl font-bold text-slate-700 dark:text-slate-100">--%</p>
             <p class="sub text-[11px] text-slate-400">-- mm now</p>
           </article>
 
-          <article class="detail-card glass-card p-4" data-detail="feels-like">
+          <article class="detail-card glass-card glass-card-hover p-4" data-detail="feels-like">
             <span class="flex h-8 w-8 items-center justify-center rounded-full bg-rose-400/15 text-rose-400"><i class="fa-solid fa-temperature-half" aria-hidden="true"></i></span>
             <p class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Feels Like</p>
             <p class="value text-xl font-bold text-slate-700 dark:text-slate-100">--°</p>
             <p class="sub text-[11px] text-slate-400">Apparent temperature</p>
           </article>
 
-          <article class="detail-card glass-card p-4" data-detail="sunrise">
+          <article class="detail-card glass-card glass-card-hover p-4" data-detail="sunrise">
             <span class="flex h-8 w-8 items-center justify-center rounded-full bg-accent-amber/15 text-accent-amber"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i></span>
             <p class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Sunrise</p>
             <p class="value text-xl font-bold text-slate-700 dark:text-slate-100">--:--</p>
             <p class="sub text-[11px] text-slate-400">Golden hour</p>
           </article>
 
-          <article class="detail-card glass-card p-4" data-detail="sunset">
+          <article class="detail-card glass-card glass-card-hover p-4" data-detail="sunset">
             <span class="flex h-8 w-8 items-center justify-center rounded-full bg-rose-400/15 text-rose-400"><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></span>
             <p class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Sunset</p>
             <p class="value text-xl font-bold text-slate-700 dark:text-slate-100">--:--</p>
@@ -348,7 +352,8 @@
           <h2 class="text-sm font-bold text-slate-700 dark:text-slate-100">Weather Charts</h2>
         </div>
 
-        <div id="chart-tabs" class="mt-4 flex flex-wrap gap-2" role="tablist">
+        <div id="chart-tabs" class="relative mt-4 flex flex-wrap gap-2" role="tablist">
+          <div id="chart-tab-indicator" class="chart-tab-indicator" aria-hidden="true"></div>
           <button type="button" class="chart-tab active" data-chart="temperature" role="tab" aria-selected="true">Temperature</button>
           <button type="button" class="chart-tab" data-chart="humidity" role="tab" aria-selected="false">Humidity</button>
           <button type="button" class="chart-tab" data-chart="precipitation" role="tab" aria-selected="false">Precipitation</button>
@@ -435,5 +440,9 @@
       </p>
     </footer>
   </div>
+
+  <button id="scroll-top-btn" type="button" class="scroll-top-btn" aria-label="Scroll to top">
+    <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+  </button>
 </body>
 </html>

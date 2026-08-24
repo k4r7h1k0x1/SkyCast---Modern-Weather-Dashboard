@@ -11,51 +11,50 @@ import { renderChart } from './modules/renderChart.js';
 import { renderAlerts } from './modules/renderAlerts.js';
 import { initFavoriteToggle, renderFavoritesBar } from './modules/renderFavorites.js';
 import { initShareButton } from './modules/shareCard.js';
-import { initSettingsPanel } from './modules/settingsPanel.js';
 import { playDashboardEntrance } from './modules/animations.js';
 import { getZonedNow, formatTime24, round } from './utils/format.js';
 import { describeWeatherCode } from './modules/weatherIcons.js';
-import { getRecentSearches } from './modules/recentSearches.js';
 import { storage, STORAGE_KEYS } from './utils/storage.js';
 import { registerServiceWorker } from './utils/registerServiceWorker.js';
+import { initSearchShortcut } from './modules/keyboardShortcuts.js';
+import { initScrollToTop } from './modules/scrollToTop.js';
+import { showToast } from './modules/toast.js';
 
 const elements = {};
-let lastForecast = null; 
-let lastLocation = null; 
+let lastForecast = null; // kept so chart-tab switches can redraw without refetching
+let lastLocation = null; // kept for the Share card
 let clockTimer = null;
-let lastAttemptedLocation = null; 
+let lastAttemptedLocation = null; // kept so "Try again" can re-run the same fetch
 
 document.addEventListener('DOMContentLoaded', () => {
   cacheElements();
   initTheme('#theme-toggle');
   initSearch();
   initGeolocation();
-  initSettingsPanel();
   wireChartTabs();
   wireUnitToggle();
   wireRetryButton();
   wireSkipLink();
+  wireEmptyState();
   initShareButton(buildShareData);
   registerServiceWorker();
-
-  document.addEventListener('skycast:unit-change', () => {
-    const location = resolveIncomingLocation();
-    if (location) loadDashboard(location);
-  });
-  document.addEventListener('skycast:favorites-change', () => {
-    renderFavoritesBar(lastLocation);
-  });
+  initSearchShortcut();
+  initScrollToTop();
+  wireThemeChangeListener();
 
   const location = resolveIncomingLocation();
+  document.addEventListener('skycast:favoriteschange', () => {
+    renderFavoritesBar(location);
+  });
+  renderFavoritesBar(location);
+
   if (!location) {
     showEmpty();
-    renderFavoritesBar(null);
     return;
   }
 
   setLocationName(location);
   initFavoriteToggle(location);
-  renderFavoritesBar(location);
   loadDashboard(location);
 });
 
@@ -65,7 +64,6 @@ function cacheElements() {
   elements.errorMessage = document.getElementById('dashboard-error-message');
   elements.retryBtn = document.getElementById('dashboard-retry-btn');
   elements.empty = document.getElementById('dashboard-empty');
-  elements.emptyRecents = document.getElementById('dashboard-empty-recents');
   elements.content = document.getElementById('dashboard-content');
   elements.unitToggle = document.getElementById('unit-toggle');
   elements.unitToggleLabel = document.getElementById('unit-toggle-label');
@@ -78,12 +76,22 @@ function wireSkipLink() {
   });
 }
 
+function wireEmptyState() {
+  document.getElementById('empty-search-btn')?.addEventListener('click', () => {
+    document.getElementById('search-input')?.focus();
+  });
+  document.getElementById('empty-location-btn')?.addEventListener('click', () => {
+    document.getElementById('my-location-btn')?.click();
+  });
+}
+
 function wireRetryButton() {
   elements.retryBtn?.addEventListener('click', () => {
     if (lastAttemptedLocation) loadDashboard(lastAttemptedLocation);
   });
 }
 
+/** Reads ?lat=&lon=&name=&country= from the URL, falling back to the last-saved location. */
 function resolveIncomingLocation() {
   const params = new URLSearchParams(window.location.search);
   const lat = params.get('lat');
@@ -108,6 +116,7 @@ function setLocationName(location) {
   }
 }
 
+/** Fetches forecast + air quality for `location` and renders every section. */
 async function loadDashboard(location) {
   showLoading();
   stopLiveClock();
@@ -126,8 +135,13 @@ async function loadDashboard(location) {
     renderHourly(forecast);
     renderDaily(forecast);
     renderAQI(airQuality);
-    await renderChart(forecast, getActiveChartMetric());
     renderAlerts(forecast);
+
+    try {
+      await renderChart(forecast, getActiveChartMetric());
+    } catch {
+      showToast("Couldn't load the weather chart. The rest of your data is still up to date.", { type: 'error' });
+    }
 
     storage.set(STORAGE_KEYS.LAST_LOCATION, location);
     showContent();
@@ -187,7 +201,7 @@ function updateUnitToggleLabel(unit) {
   }
 }
 
-function setVisibleState(state) {
+function setDashboardState(state) {
   if (elements.loading) {
     elements.loading.hidden = state !== 'loading';
     elements.loading.classList.toggle('flex', state === 'loading');
@@ -200,15 +214,21 @@ function setVisibleState(state) {
     elements.empty.hidden = state !== 'empty';
     elements.empty.classList.toggle('flex', state === 'empty');
   }
-  if (elements.content) elements.content.hidden = state !== 'content';
+  if (elements.content) {
+    elements.content.hidden = state !== 'content';
+  }
 }
 
 function showLoading() {
-  setVisibleState('loading');
+  setDashboardState('loading');
+}
+
+function showEmpty() {
+  setDashboardState('empty');
 }
 
 function showContent() {
-  setVisibleState('content');
+  setDashboardState('content');
   if (elements.content) {
     elements.content.style.opacity = '0';
     requestAnimationFrame(() => {
@@ -220,47 +240,19 @@ function showContent() {
 }
 
 function showError(message, { canRetry = false } = {}) {
-  setVisibleState('error');
+  setDashboardState('error');
   if (elements.errorMessage) elements.errorMessage.textContent = message;
   if (elements.retryBtn) elements.retryBtn.hidden = !canRetry;
 }
 
-function showEmpty() {
-  setVisibleState('empty');
-
-  const recents = getRecentSearches();
-  if (!elements.emptyRecents || !recents.length) {
-    if (elements.emptyRecents) elements.emptyRecents.hidden = true;
-    return;
-  }
-
-  elements.emptyRecents.hidden = false;
-  elements.emptyRecents.innerHTML = recents
-    .map((loc, i) => `
-      <button type="button" class="fav-chip" data-index="${i}">
-        <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
-        ${escapeHtml(loc.name)}
-      </button>`)
-    .join('');
-
-  elements.emptyRecents.querySelectorAll('.fav-chip').forEach((button) => {
-    button.addEventListener('click', () => {
-      const loc = recents[Number(button.dataset.index)];
-      const params = new URLSearchParams({
-        lat: loc.lat,
-        lon: loc.lon,
-        name: loc.name,
-        country: loc.country ?? '',
+function wireThemeChangeListener() {
+  document.addEventListener('skycast:themechange', () => {
+    if (lastForecast) {
+      renderChart(lastForecast, getActiveChartMetric()).catch(() => {
+        // interrupting the user with a toast over.
       });
-      window.location.href = `/dashboard.html?${params.toString()}`;
-    });
+    }
   });
-}
-
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]));
 }
 
 function getActiveChartMetric() {
@@ -268,8 +260,11 @@ function getActiveChartMetric() {
   return active?.dataset.chart ?? 'temperature';
 }
 
+/** Tab switching for the Weather Charts section — redraws the chart from the cached forecast. */
 function wireChartTabs() {
+  const tabsContainer = document.getElementById('chart-tabs');
   const tabs = document.querySelectorAll('.chart-tab');
+  const indicator = document.getElementById('chart-tab-indicator');
   const caption = document.getElementById('chart-caption');
 
   const captions = {
@@ -280,6 +275,16 @@ function wireChartTabs() {
     '7-day': '7-day outlook',
   };
 
+  function moveIndicatorTo(tab) {
+    if (!indicator || !tabsContainer || !tab) return;
+    const containerRect = tabsContainer.getBoundingClientRect();
+    const tabRect = tab.getBoundingClientRect();
+    indicator.style.width = `${tabRect.width}px`;
+    indicator.style.height = `${tabRect.height}px`;
+    indicator.style.transform = `translate(${tabRect.left - containerRect.left}px, ${tabRect.top - containerRect.top}px)`;
+    indicator.style.opacity = '1';
+  }
+
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => {
       tabs.forEach((t) => {
@@ -288,8 +293,20 @@ function wireChartTabs() {
       });
       tab.classList.add('active');
       tab.setAttribute('aria-selected', 'true');
+      moveIndicatorTo(tab);
       if (caption) caption.textContent = captions[tab.dataset.chart] ?? '';
-      if (lastForecast) renderChart(lastForecast, tab.dataset.chart);
+      if (lastForecast) {
+        renderChart(lastForecast, tab.dataset.chart).catch(() => {
+          showToast("Couldn't load the chart. Check your connection and try again.", { type: 'error' });
+        });
+      }
     });
   });
+  requestAnimationFrame(() => moveIndicatorTo(document.querySelector('.chart-tab.active')));
+
+  if (tabsContainer && 'ResizeObserver' in window) {
+    new ResizeObserver(() => {
+      moveIndicatorTo(document.querySelector('.chart-tab.active'));
+    }).observe(tabsContainer);
+  }
 }

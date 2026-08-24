@@ -11,6 +11,7 @@ export function initSearch(selectors = {}) {
   const list = document.querySelector(selectors.listSelector ?? '#search-suggestions');
   const spinner = document.querySelector(selectors.spinnerSelector ?? '#search-spinner');
   const cta = document.getElementById('search-cta');
+  const clearBtn = document.getElementById('search-clear-btn');
 
   if (!form || !input || !list) return;
 
@@ -21,7 +22,11 @@ export function initSearch(selectors = {}) {
 
   cta?.addEventListener('click', () => input.focus());
 
-  wireGlobalShortcut(input);
+  clearBtn?.addEventListener('click', () => {
+    input.value = '';
+    input.focus();
+    showRecents();
+  });
 
   input.addEventListener('focus', () => {
     if (!input.value.trim()) showRecents();
@@ -44,7 +49,7 @@ export function initSearch(selectors = {}) {
   });
 
   input.addEventListener('keydown', (event) => {
-    if (list.classList.contains('hidden')) return;
+    if (!list.classList.contains('suggestions-open')) return;
 
     if (event.key === 'ArrowDown') {
       event.preventDefault();
@@ -150,13 +155,13 @@ export function initSearch(selectors = {}) {
       });
     });
 
-    list.classList.remove('hidden');
+    list.classList.add('suggestions-open');
     input.setAttribute('aria-expanded', 'true');
   }
 
   function showMessage(message) {
     list.innerHTML = `<li class="px-4 py-3 text-sm text-slate-400" role="status">${escapeHtml(message)}</li>`;
-    list.classList.remove('hidden');
+    list.classList.add('suggestions-open');
     input.setAttribute('aria-expanded', 'true');
   }
 
@@ -170,7 +175,7 @@ export function initSearch(selectors = {}) {
   }
 
   function closeList() {
-    list.classList.add('hidden');
+    list.classList.remove('suggestions-open');
     activeIndex = -1;
     input.setAttribute('aria-expanded', 'false');
     input.removeAttribute('aria-activedescendant');
@@ -201,22 +206,4 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[c]));
-}
-
-function wireGlobalShortcut(input) {
-  document.addEventListener('keydown', (event) => {
-    if (event.key !== '/') return;
-    if (event.metaKey || event.ctrlKey || event.altKey) return;
-
-    const active = document.activeElement;
-    const isTyping = active && (
-      active.tagName === 'INPUT'
-      || active.tagName === 'TEXTAREA'
-      || active.isContentEditable
-    );
-    if (isTyping) return;
-
-    event.preventDefault();
-    input.focus();
-  });
 }

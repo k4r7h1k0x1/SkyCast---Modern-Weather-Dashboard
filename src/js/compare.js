@@ -7,8 +7,8 @@ import { getFavorites } from './utils/favorites.js';
 import { describeWeatherCode } from './modules/weatherIcons.js';
 import { round } from './utils/format.js';
 import { storage, STORAGE_KEYS } from './utils/storage.js';
-import { initSettingsPanel } from './modules/settingsPanel.js';
 import { registerServiceWorker } from './utils/registerServiceWorker.js';
+import { initSearchShortcut } from './modules/keyboardShortcuts.js';
 
 const MAX_COMPARE = 3;
 
@@ -16,12 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme('#theme-toggle');
   initSearch();
   initGeolocation();
-  initSettingsPanel();
   wireSkipLink();
   registerServiceWorker();
+  initSearchShortcut();
   loadComparison();
-  document.addEventListener('skycast:favorites-change', loadComparison);
-  document.addEventListener('skycast:unit-change', loadComparison);
 });
 
 function wireSkipLink() {
@@ -47,29 +45,36 @@ async function loadComparison() {
   grid.hidden = false;
   grid.innerHTML = favorites.map(() => skeletonCard()).join('');
 
-  const unit = storage.get(STORAGE_KEYS.UNIT, 'celsius');
-  const results = await Promise.allSettled(
-    favorites.map((loc) => getFullWeatherData(loc.lat, loc.lon, { unit })),
-  );
+  try {
+    const unit = storage.get(STORAGE_KEYS.UNIT, 'celsius');
+    const results = await Promise.allSettled(
+      favorites.map((loc) => getFullWeatherData(loc.lat, loc.lon, { unit })),
+    );
 
-  grid.innerHTML = favorites
-    .map((loc, i) => {
-      const result = results[i];
-      return result.status === 'fulfilled'
-        ? buildCard(loc, result.value.forecast, unit)
-        : errorCard(loc);
-    })
-    .join('');
+    grid.innerHTML = favorites
+      .map((loc, i) => {
+        const result = results[i];
+        return result.status === 'fulfilled'
+          ? buildCard(loc, result.value.forecast, unit)
+          : errorCard(loc);
+      })
+      .join('');
 
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    gsap.from('#compare-grid > *', {
-      y: 16,
-      opacity: 0,
-      duration: 0.4,
-      stagger: 0.1,
-      ease: 'power2.out',
-      clearProps: 'opacity,transform',
-    });
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.from('#compare-grid > *', {
+        y: 16,
+        opacity: 0,
+        duration: 0.4,
+        stagger: 0.1,
+        ease: 'power2.out',
+        clearProps: 'opacity,transform',
+      });
+    }
+  } catch {
+    // Defense-in-depth: loadComparison() is called fire-and-forget from
+    // DOMContentLoaded, so without this the grid would otherwise be stuck
+    // showing skeletons forever if something unexpected failed above.
+    grid.innerHTML = favorites.map((loc) => errorCard(loc)).join('');
   }
 }
 

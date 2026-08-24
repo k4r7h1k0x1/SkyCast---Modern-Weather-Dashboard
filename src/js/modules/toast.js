@@ -2,16 +2,13 @@ let container = null;
 
 const ICONS = {
   info: 'fa-circle-info',
-  warning: 'fa-triangle-exclamation',
-  error: 'fa-circle-exclamation',
+  error: 'fa-triangle-exclamation',
   success: 'fa-circle-check',
 };
 
-function getContainer() {
+function ensureContainer() {
   if (container) return container;
-
   container = document.createElement('div');
-  container.id = 'toast-container';
   container.className = 'toast-container';
   container.setAttribute('role', 'status');
   container.setAttribute('aria-live', 'polite');
@@ -20,26 +17,29 @@ function getContainer() {
 }
 
 export function showToast(message, { type = 'info', duration = 4500 } = {}) {
-  const el = document.createElement('div');
-  el.className = `toast toast-${type}`;
-  el.innerHTML = `
+  const root = ensureContainer();
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
     <i class="fa-solid ${ICONS[type] ?? ICONS.info}" aria-hidden="true"></i>
     <span>${escapeHtml(message)}</span>
   `;
-
-  getContainer().appendChild(el);
-
+  root.appendChild(toast);
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => el.classList.add('toast-visible'));
+    requestAnimationFrame(() => toast.classList.add('toast-visible'));
   });
 
+  let dismissed = false;
   const dismiss = () => {
-    el.classList.remove('toast-visible');
-    setTimeout(() => el.remove(), 300);
+    if (dismissed) return;
+    dismissed = true;
+    toast.classList.remove('toast-visible');
+    setTimeout(() => toast.remove(), 250);
   };
 
   const timer = setTimeout(dismiss, duration);
-  el.addEventListener('click', () => {
+  toast.addEventListener('click', () => {
     clearTimeout(timer);
     dismiss();
   });

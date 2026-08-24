@@ -1,7 +1,8 @@
-import { storage, STORAGE_KEYS } from './storage.js';
+import { storage, STORAGE_KEYS } from "../utils/storage.js";
 
 const MAX_FAVORITES = 8;
 
+/** Returns pinned cities. */
 export function getFavorites() {
   return storage.get(STORAGE_KEYS.FAVORITES, []);
 }
@@ -18,17 +19,26 @@ export function toggleFavorite(location) {
     (f) => f.name === location.name && f.country === location.country,
   );
 
+  let updated;
+  let favorited;
+
   if (exists) {
-    const updated = current.filter(
+    updated = current.filter(
       (f) => !(f.name === location.name && f.country === location.country),
     );
-    storage.set(STORAGE_KEYS.FAVORITES, updated);
-    return false;
+    favorited = false;
+  } else {
+    updated = [...current, location].slice(0, MAX_FAVORITES);
+    favorited = true;
   }
 
-  const updated = [...current, location].slice(0, MAX_FAVORITES);
   storage.set(STORAGE_KEYS.FAVORITES, updated);
-  return true;
+  document.dispatchEvent(
+    new CustomEvent("skycast:favoriteschange", {
+      detail: { location, favorited },
+    }),
+  );
+  return favorited;
 }
 
 export { MAX_FAVORITES };
