@@ -65,6 +65,18 @@ No backend, no database, no API keys, and no environment variables are required 
 
 ---
 
+## References 
+
+<img width="1918" height="1001" alt="image" src="https://github.com/user-attachments/assets/80d76982-ff34-4ff1-9c0c-2774151dfd63" />
+
+<img width="1902" height="994" alt="image" src="https://github.com/user-attachments/assets/c4b0245f-f3ae-4fdd-8d8a-1c79544481d4" />
+
+<img width="1875" height="733" alt="image" src="https://github.com/user-attachments/assets/503b90b9-0335-4d42-9231-0dab566f17f7" />
+
+<img width="1906" height="961" alt="image" src="https://github.com/user-attachments/assets/3cc2dcd5-9e9a-486c-b79c-a960e3949b05" />
+
+---
+
 ## Getting started
 
 ```bash
