@@ -71,9 +71,6 @@ async function loadComparison() {
       });
     }
   } catch {
-    // Defense-in-depth: loadComparison() is called fire-and-forget from
-    // DOMContentLoaded, so without this the grid would otherwise be stuck
-    // showing skeletons forever if something unexpected failed above.
     grid.innerHTML = favorites.map((loc) => errorCard(loc)).join('');
   }
 }

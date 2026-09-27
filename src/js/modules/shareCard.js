@@ -40,7 +40,6 @@ function shareCard(data) {
         });
         return;
       } catch {
-        // User cancelled the share sheet, or it failed — fall through to download.
       }
     }
 

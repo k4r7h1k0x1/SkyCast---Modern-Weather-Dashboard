@@ -21,10 +21,10 @@ import { initScrollToTop } from './modules/scrollToTop.js';
 import { showToast } from './modules/toast.js';
 
 const elements = {};
-let lastForecast = null; // kept so chart-tab switches can redraw without refetching
-let lastLocation = null; // kept for the Share card
+let lastForecast = null; 
+let lastLocation = null; 
 let clockTimer = null;
-let lastAttemptedLocation = null; // kept so "Try again" can re-run the same fetch
+let lastAttemptedLocation = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   cacheElements();
@@ -91,7 +91,6 @@ function wireRetryButton() {
   });
 }
 
-/** Reads ?lat=&lon=&name=&country= from the URL, falling back to the last-saved location. */
 function resolveIncomingLocation() {
   const params = new URLSearchParams(window.location.search);
   const lat = params.get('lat');
@@ -249,7 +248,6 @@ function wireThemeChangeListener() {
   document.addEventListener('skycast:themechange', () => {
     if (lastForecast) {
       renderChart(lastForecast, getActiveChartMetric()).catch(() => {
-        // interrupting the user with a toast over.
       });
     }
   });
@@ -260,7 +258,6 @@ function getActiveChartMetric() {
   return active?.dataset.chart ?? 'temperature';
 }
 
-/** Tab switching for the Weather Charts section — redraws the chart from the cached forecast. */
 function wireChartTabs() {
   const tabsContainer = document.getElementById('chart-tabs');
   const tabs = document.querySelectorAll('.chart-tab');
